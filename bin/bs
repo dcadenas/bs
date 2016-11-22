@@ -1,8 +1,20 @@
 #!/bin/bash
 
 if [[ -f .env ]]; then
-  eval "$(awk '/^[A-Z]/ { print "export " $0 }' .env)"
+  AWKSCRIPT='
+    BEGIN{
+      RS="[A-Z][^=]*=[^\n]";
+      FS=RS
+      PreviousRT=""
+    }
 
+    { if (PreviousRT != "")
+        print "export " PreviousRT $0;
+        PreviousRT=RT
+    }
+  '
+
+  eval "$(awk "$AWKSCRIPT" .env)"
 
   if [[ $# -gt 0 ]]; then
     "$@"
